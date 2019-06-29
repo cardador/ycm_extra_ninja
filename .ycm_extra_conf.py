@@ -108,12 +108,12 @@ SOURCE_EXTENSIONS = [ '.cpp', '.cxx', '.cc', '.c', '.m', '.mm' ]
 
 
 def ParseNinjaRules( compdb_folder ):
-  parent = os.path.abspath(os.path.join(compilation_database_folder, os.pardir))
+  parent = os.path.abspath(os.path.join(compdb_folder, os.pardir))
   logger.debug("Parent %s", parent)
   # For this project there are multiple destination folders containing the
   # rules.ninja file, they all follow a pattern of having appl on their names
-  lsdir = [appl for appl in next(os.walk( parent ))[1] if 'appl' in appl]
-  if not os.path.exists( compilation_database_folder ):
+  lsdir = [appl for appl in next(os.walk(parent))[1] if 'appl' in appl]
+  if not os.path.exists(compdb_folder):
     os.makedirs( compdb_folder )
   merged = ''
 
@@ -129,7 +129,7 @@ def ParseNinjaRules( compdb_folder ):
     merged = merge(merged, jsonvar)
     logger.debug("Command %s", cmd)
 
-  finalout = '{}/{}'.format(compilation_database_folder, 'compile_commands.json')
+  finalout = '{}/{}'.format(compdb_folder, 'compile_commands.json')
   with open(finalout, "w") as outfile:
     json.dump(merged, outfile, sort_keys=True, indent=2, separators=(',', ':'))
 
