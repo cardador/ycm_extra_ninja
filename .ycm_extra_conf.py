@@ -115,23 +115,26 @@ def ParseNinjaRules( compdb_folder ):
   lsdir = [appl for appl in next(os.walk(parent))[1] if 'appl' in appl]
   if not os.path.exists(compdb_folder):
     os.makedirs( compdb_folder )
-  merged = ''
+   
+  complete = []
 
   for folder in lsdir:
     build = '{}/{}'.format(parent, folder)
-    logger.debug("Processing folder %s", build)
-    awk = 'awk \'/^rule (C|CXX)_COMPILER__/ {{ print $2 }}\' {build}/rules.ninja'.format(build=build)
-    output = subprocess.check_output(shlex.split(awk), stderr=subprocess.STDOUT)
-    output = output.replace(b'\n', b' ')
-    cmd = 'ninja -C {b} -t compdb -t query {ak}'.format(b=build, ak=output.decode())
-    jsonbytes = subprocess.check_output(shlex.split(cmd), stderr=subprocess.STDOUT)
-    jsonvar = json.loads(jsonbytes.decode())
-    merged = merge(merged, jsonvar)
-    logger.debug("Command %s", cmd)
+    rules = f"{build}/rules.ninja"
+    if os.path.isfile(rules):
+        awk = 'awk \'/^rule (C|CXX)_COMPILER__/ {{ print $2 }}\' {build}/rules.ninja'.format(build=build)
+        output = subprocess.check_output(shlex.split(awk), stderr=subprocess.STDOUT)
+        output = output.replace(b'\n', b' ')
+        cmd = 'ninja -C {b} -t compdb -t query {ak}'.format(b=build, ak=output.decode())
+        jsonbytes = subprocess.check_output(shlex.split(cmd), stderr=subprocess.STDOUT)
+        jsonlist = json.loads(jsonbytes)#.decode())
+        for item in jsonlist:
+            complete.append(item)
+
 
   finalout = '{}/{}'.format(compdb_folder, 'compile_commands.json')
   with open(finalout, "w") as outfile:
-    json.dump(merged, outfile, sort_keys=True, indent=2, separators=(',', ':'))
+    json.dump(complete, outfile, sort_keys=True, indent=2, separators=(',', ':'))
 
 ParseNinjaRules(compilation_database_folder)
 if os.path.exists( compilation_database_folder ):
